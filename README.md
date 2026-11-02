@@ -44,8 +44,12 @@ out/preview.png         缩略图（--png）
 |---|---|---|
 | `trips/recommend-guangdong.json` | 不知道去哪时的一页候选对比 | 1 |
 | `trips/chaoshan.json` | 挑定之后排成的整册 | 12 |
+| `trips/huizhou.json` | 另一册，用来证明它不认城市 | 6 |
+| `trips/_template.json` | 空模板，复制成新文件再填 | 3 |
 
 先跑第一个，挑一个，再把挑中的那个排成第二个那样。
+
+**这个仓库不生成行程。** 它把已经写好的行程排成 PDF。目的地、时间点、吃什么、预算，都是写进 `trips/*.json` 的内容：换一个 json 就换一座城，`huizhou.json` 和 `chaoshan.json` 是同一个程序排出来的。行程本身要靠人或者 agent 去问、去查、去排，程序不负责这一步。
 
 仓库里不含照片，`photos/` 目录里只有一张说明。缺图不会报错，会画成写着文件名的中性色块，版式不变（上面那张截图就是这样）。想换成自己的图，看 [photos/README.md](photos/README.md)。
 
