@@ -1,0 +1,7 @@
+﻿out/
+book.html
+preview.html
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
