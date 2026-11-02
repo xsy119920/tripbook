@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """把一份行程 JSON 渲染成一册卡片式 PDF。
 
     python make.py trips/chaoshan.json
@@ -76,25 +76,28 @@ def base(c: Canvas, n: int):
 
 # ------------------------------------------------------------------ 页面
 def page_cover(c, p, n):
-    c.photo(p["image"], 0, 0, W, 470, r=0)
+    photo = p.get("image")
+    if photo:
+        c.photo(photo, 0, 0, W, 470, r=0)
 
-    veil = Image.new("RGBA", (int(W * c.s), int(470 * c.s)), (0, 0, 0, 0))
-    vd = ImageDraw.Draw(veil)
-    for yy in range(int(470 * c.s)):
-        a = int(66 + 120 * (yy / (470 * c.s)) ** 1.5)
-        vd.line([(0, yy), (W * c.s, yy)], fill=(26, 11, 7, a))
-    left = Image.new("L", (1, 1), 0)
-    lw = Image.new("L", (int(W * c.s), 1), 0)
-    ld = ImageDraw.Draw(lw)
-    for xx in range(int(W * c.s)):
-        ld.point((xx, 0), fill=int(135 * max(0.0, 1 - xx / (W * c.s)) ** 2))
-    dark = Image.new("RGBA", veil.size, (26, 11, 7, 255))
-    dark.putalpha(lw.resize(veil.size, Image.BICUBIC))
-    veil = Image.alpha_composite(veil, dark)
+        veil = Image.new("RGBA", (int(W * c.s), int(470 * c.s)), (0, 0, 0, 0))
+        vd = ImageDraw.Draw(veil)
+        for yy in range(int(470 * c.s)):
+            a = int(66 + 120 * (yy / (470 * c.s)) ** 1.5)
+            vd.line([(0, yy), (W * c.s, yy)], fill=(26, 11, 7, a))
+        lw = Image.new("L", (int(W * c.s), 1), 0)
+        ld = ImageDraw.Draw(lw)
+        for xx in range(int(W * c.s)):
+            ld.point((xx, 0), fill=int(135 * max(0.0, 1 - xx / (W * c.s)) ** 2))
+        dark = Image.new("RGBA", veil.size, (26, 11, 7, 255))
+        dark.putalpha(lw.resize(veil.size, Image.BICUBIC))
+        veil = Image.alpha_composite(veil, dark)
 
-    base_img = c.img.crop((0, 0, int(W * c.s), int(470 * c.s))).convert("RGBA")
-    c.img.paste(Image.alpha_composite(base_img, veil).convert("RGB"), (0, 0))
-    c.d = ImageDraw.Draw(c.img)
+        base_img = c.img.crop((0, 0, int(W * c.s), int(470 * c.s))).convert("RGBA")
+        c.img.paste(Image.alpha_composite(base_img, veil).convert("RGB"), (0, 0))
+        c.d = ImageDraw.Draw(c.img)
+    else:
+        c.rect(0, 0, W, 470, T.INK)
 
     c.rect(0, 470, W, 6, T.GOLD)
     c.text(M, 216, p.get("place", ""), size=28, fill="#F6DCCB", bold=True)
