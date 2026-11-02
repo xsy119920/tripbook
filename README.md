@@ -79,7 +79,7 @@ python make.py trips/chaoshan.json --html-only
 
 这份排版是按几条硬规则做的，写在这里，改的时候别破坏：
 
-1. 颜色只有五个：纸、墨、灰、朱红、细线。全部在 `design/doc.css` 的 `:root` 里，正文里不出现色值。
+1. 颜色只有五个：纸、墨、灰、墨蓝、细线。全部在 `design/doc.css` 的 `:root` 里，正文里不出现色值。
 2. 不用卡片、不用阴影、不用圆角面板。分区分靠 0.3 到 0.4 磅的细线。
 3. 字族最多两个：标题华文中宋，正文等线。
 4. 一页只说一件事。文字放不下就减字，不缩字号。
@@ -88,6 +88,14 @@ python make.py trips/chaoshan.json --html-only
 7. 不使用「必去」「绝美」「天花板」这类词。
 
 `design/doc.css` 开头的注释是这套规则的版本戳。
+
+## 这套版式从哪来
+
+用 [Hallmark](https://github.com/tripbook/hallmark) 的设计方法做的。跑它的抽签，抽到 **Specimen**：
+
+> 暖燕麦纸，近黑的墨，高对比衬线压在无衬线正文上，1px 方线，唯一的墨蓝信号。
+
+颜色和线宽照抄了它的 token。字体做了替换：Specimen 用 Bodoni Moda 和 Geist，都没有中文字形，换成华文中宋（高对比衬线，对应 Bodoni）和等线（中性无衬线，对应 Geist）。两处刻意的偏离：照片保留彩色（Specimen 原本是墨色双色调），封面允许字压在图上（它原本规定字不落在照片上）。
 
 ## 已知限制
 
