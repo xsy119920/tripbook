@@ -6,6 +6,7 @@ import sys
 # 纸、墨、线、四种信号色
 BG = "#F6F1E7"
 CARD = "#FFFFFF"
+PAPER_2 = "#EFE8DA"
 INK = "#241E19"
 MUTED = "#6E6154"
 LINE = "#E3D8C4"

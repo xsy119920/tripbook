@@ -5,3 +5,7 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+photos/*.jpg
+photos/*.jpeg
+photos/*.png

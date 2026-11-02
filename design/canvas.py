@@ -87,6 +87,9 @@ class Canvas:
 
     # ------------------------------------------------------------ images
     def photo(self, path, x, y, w, h, r=22):
+        if not path or not os.path.exists(path):
+            self._placeholder(os.path.basename(str(path)), x, y, w, h, r)
+            return
         im = Image.open(path).convert("RGB")
         target = (int(w * self.s), int(h * self.s))
         if im.size != target:
@@ -98,6 +101,14 @@ class Canvas:
             self.img.paste(im, (int(x * self.s), int(y * self.s)), mask)
         else:
             self.img.paste(im, (int(x * self.s), int(y * self.s)))
+
+    def _placeholder(self, name, x, y, w, h, r):
+        """缺图时画一个中性色块，仓库里不带任何别人的照片。"""
+        self.rect(x, y, w, h, T.PAPER_2, r=r)
+        self.rect(x + 1, y + 1, w - 2, h - 2, T.PAPER_2, r=r, outline=T.LINE, lw=2)
+        label = name or "photo"
+        size = min(26, max(16, int(w / 18)))
+        self.text(x + w / 2, y + h / 2, label, size=size, fill=T.MUTED, anchor="mm")
 
     def save(self, path: str):
         self.img.save(path, "PNG")
