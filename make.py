@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """把一份行程 JSON 渲染成一册卡片式 PDF。
 
     python make.py trips/chaoshan.json
@@ -261,7 +261,7 @@ def page_day(c, p, n):
         c.text(M, y + 2, p["lead"], size=36, bold=True)
 
     rows = p.get("rows", [])
-    gap = min(126, int((1150 - 280) / max(len(rows), 1)))
+    gap = min(150, int((1150 - 280) / max(len(rows), 1)))
     timeline(c, 280, rows, accent, gap)
 
     if p.get("badge"):
@@ -508,6 +508,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
