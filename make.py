@@ -38,6 +38,17 @@ def head(c: Canvas, no: str, title: str, accent: str) -> float:
     return M + 116
 
 
+def num(value):
+    """模型常写 "¥600" 或 "600块"。取出数字，取不到就当 0。"""
+    if isinstance(value, (int, float)):
+        return float(value)
+    digits = re.sub(r"[^0-9.]", "", str(value))
+    try:
+        return float(digits) if digits else 0.0
+    except ValueError:
+        return 0.0
+
+
 def stat_box(c, x, y, w, value, label, accent=T.RED, h=150):
     c.rect(x, y, w, h, T.CREAM, r=22, outline=T.LINE, lw=2)
     c.text(x + w / 2, y + h * 0.42, value, size=36, fill=accent, bold=True, anchor="mm")
@@ -209,19 +220,31 @@ def page_route(c, p, n):
         c.text(M, y + 2, p["lead"], size=34, bold=True)
 
     c.panel(M, 300, W - 2 * M, 372)
-    stops = p["stops"]
-    xs = [M + 108 + i * 240 for i in range(len(stops))]
+
+    # 模型有时把 stops 写成 {"name","note","leg"}，有时写成 [名字, 说明, 里程]。
+    # 两种都收，排不满四个也不会挤在一起。
+    stops = []
+    for s in p["stops"]:
+        if isinstance(s, dict):
+            stops.append((s.get("name", ""), s.get("note", ""), s.get("leg", "")))
+        else:
+            vals = list(s) + ["", "", ""]
+            stops.append((vals[0], vals[1], vals[2]))
+
+    left, right = M + 108, W - M - 108
+    step = (right - left) / (len(stops) - 1) if len(stops) > 1 else 0
+    xs = [left + i * step for i in range(len(stops))]
     ly = 300 + 186
     c.line([(xs[0], ly), (xs[-1], ly)], T.LINE, 4)
-    for i, stop in enumerate(stops):
+    for i, (name, note, leg) in enumerate(stops):
         cx = xs[i]
         colour = T.GREEN if i == len(stops) - 1 else accent
         c.circle(cx, ly, 26, colour)
         c.text(cx, ly, str(i + 1), size=26, fill="#FFFFFF", bold=True, anchor="mm")
-        c.text(cx, ly + 56, stop["name"], size=36, bold=True, anchor="ma")
-        c.text(cx, ly + 104, stop["note"], size=22, fill=T.MUTED, anchor="ma")
-        if i < len(stops) - 1:
-            c.text((xs[i] + xs[i + 1]) / 2, ly - 54, stop["leg"], size=22,
+        c.text(cx, ly + 56, name, size=36, bold=True, anchor="ma")
+        c.text(cx, ly + 104, note, size=22, fill=T.MUTED, anchor="ma")
+        if i < len(stops) - 1 and leg:
+            c.text((xs[i] + xs[i + 1]) / 2, ly - 54, leg, size=22,
                    fill=T.GOLD, bold=True, anchor="mm")
 
     if p.get("stats"):
@@ -311,11 +334,13 @@ def page_traffic(c, p, n):
     colours = {"green": (T.GREEN, T.GREEN_SOFT), "gold": (T.GOLD, T.CREAM),
                "red": (T.RED, T.RED_SOFT)}
     for i, col in enumerate(cols):
-        fg, bg = colours[col["colour"]]
+        if not isinstance(col, dict):
+            continue
+        fg, bg = colours.get(col.get("colour"), (T.GOLD, T.CREAM))
         x = M + i * (cw + 20)
         c.panel(x, 296, cw, 450, fill=bg)
-        c.text(x + 26, 320, col["title"], size=26, fill=fg, bold=True)
-        for j, item in enumerate(col["items"]):
+        c.text(x + 26, 320, col.get("title", ""), size=26, fill=fg, bold=True)
+        for j, item in enumerate(col.get("items", [])):
             c.para(x + 26, 380 + j * 60, item, 26, cw - 52, 34)
 
     if p.get("shops"):
@@ -342,15 +367,16 @@ def page_budget(c, p, n):
         c.text(M, y + 2, p["lead"], size=36, bold=True)
 
     items = p["items"]
-    top = max(v for _, v in items) or 1
+    values = [(k, num(v)) for k, v in items]
+    top = max(v for _, v in values) or 1
     c.panel(M, 290, W - 2 * M, 400)
     barx, barw = M + 300, 470
-    for i, (key, value) in enumerate(items):
+    for i, (key, value) in enumerate(values):
         yy = 326 + i * 58
         c.text(M + 40, yy, key, size=25, fill=T.MUTED, bold=True)
         c.rect(barx, yy + 6, barw, 26, T.SOFT, r=13)
         c.rect(barx, yy + 6, barw * value / top, 26, T.GOLD, r=13)
-        c.text(W - M - 40, yy + 2, "¥%d" % value, size=25, bold=True, anchor="ra")
+        c.text(W - M - 40, yy + 2, "¥%s" % (("%d" % value) if value == int(value) else ("%.0f" % value)), size=25, bold=True, anchor="ra")
 
     yy = 726
     if p.get("todos"):

@@ -60,5 +60,47 @@ def validate(trip: dict) -> None:
                         "第 %d 页第 %d 条时间：应该是 [时间, 标题, 小字] 三项" % (i, j)
                     )
 
+        if kind == "route":
+            for j, stop in enumerate(page.get("stops") or [], 1):
+                ok = isinstance(stop, dict) or (
+                    isinstance(stop, list) and 2 <= len(stop) <= 3
+                )
+                if not ok:
+                    problems.append(
+                        "第 %d 页（route）第 %d 个途经点应该是 "
+                        "{\"name\":\"\",\"note\":\"\",\"leg\":\"\"}，或者 [名字, 说明, 里程]"
+                        % (i, j)
+                    )
+
+        if kind == "traffic":
+            for j, col in enumerate(page.get("columns") or [], 1):
+                if not isinstance(col, dict):
+                    problems.append(
+                        "第 %d 页（traffic）columns 第 %d 项应该是 "
+                        "{\"colour\":\"green|gold|red\",\"title\":\"\",\"items\":[...]}"
+                        % (i, j)
+                    )
+                elif col.get("colour") not in ("green", "gold", "red"):
+                    problems.append(
+                        "第 %d 页（traffic）columns 第 %d 项的 colour 只能是 green、gold、red"
+                        % (i, j)
+                    )
+
+        if kind in ("compare",):
+            for side in ("left", "right"):
+                block = page.get(side)
+                if not isinstance(block, dict) or not block.get("items"):
+                    problems.append(
+                        "第 %d 页（compare）的 %s 应该是 {\"title\":\"\",\"items\":[...]}"
+                        % (i, side)
+                    )
+
+        if kind == "budget":
+            for j, item in enumerate(page.get("items") or [], 1):
+                if not isinstance(item, list) or len(item) != 2:
+                    problems.append(
+                        "第 %d 页（budget）第 %d 项应该是 [名目, 数字]" % (i, j)
+                    )
+
     if problems:
         raise SystemExit("这份 JSON 有 %d 处要改：\n  - %s" % (len(problems), "\n  - ".join(problems)))

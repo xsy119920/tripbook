@@ -56,7 +56,20 @@ PROTOCOL = """
 }
 ```
 
-4. pages 里每一项的 type 只能是：cover、candidates、compare、rules、route、spread、day、photos2、traffic、budget。字段要求见 README 的表格。
+4. pages 里每一项的 type 只能是下面十种，字段照抄结构，不要自创：
+
+cover    {"type":"cover","title":"","sub":"","place":"","dates":"","image":"photos/x.jpg","facts":[["同行","两个人"]],"stats":[["690km","全程"]],"mood":"","foot":{"left":"","right":""}}
+candidates {"type":"candidates","no":"01","title":"","lead":"","candidates":[{"name":"","sub":"","accent":"red","fit":"","pace":"","food":"","watch":"","verdict":""}],"strip":""}
+compare  {"type":"compare","no":"","title":"","accent":"red","lead":"","left":{"title":"","items":[""]},"right":{"title":"","items":[""]},"strip":{"label":"","text":""},"quote":{"label":"","text":""},"foot":{"label":"","text":""}}
+rules    {"type":"rules","no":"","title":"","accent":"rust","lead":"","items":[["主","注"]],"foot":"","stats":[["",""]]}
+route    {"type":"route","no":"","title":"","accent":"green","lead":"","stops":[{"name":"","note":"","leg":""}],"stats":[["",""]],"panels":[{"title":"","text":""}]}
+spread   {"type":"spread","no":"","title":"","accent":"gold","hero":"photos/a.jpg","heroCaption":"","a":"photos/b.jpg","aCaption":"","b":"photos/c.jpg","bCaption":"","tip":""}
+day      {"type":"day","no":"","title":"","accent":"red","lead":"","rows":[["08:00","出发","小字"]],"badge":"","task":""}
+photos2  {"type":"photos2","no":"","title":"","accent":"gold","lead":"","a":"","aCaption":"","b":"","bCaption":"","panel":{"title":"","text":""},"box":{"label":"","text":""}}
+traffic  {"type":"traffic","no":"","title":"","accent":"gold","lead":"","columns":[{"colour":"green","title":"","items":[""]}],"shopsLabel":"","shops":[["店名","备注"]],"box":{"label":"","text":""}}
+budget   {"type":"budget","no":"","title":"","accent":"grey","lead":"","items":[["油费",600]],"todos":{"title":"","items":[""]},"emergencyLabel":"应急","emergency":[["急救","120"]]}
+
+accent 只能是 red、green、gold、rust、grey 之一。数字写数字，别加 ¥ 和逗号。
 5. 图片：写 "photos/xxx.jpg" 这种路径；没有图就别写 image/hero/a/b 字段，程序会画占位块。
 6. 不确定的事实写「出发前核对」，不要编具体时间。
 """
@@ -105,7 +118,7 @@ def build(trip_path: Path) -> bool:
                           cwd=str(ROOT), capture_output=True, text=True)
     out = (proc.stdout or "") + (proc.stderr or "")
     print(out.strip())
-    return proc.returncode == 0
+    return proc.returncode == 0, out
 
 
 def save(trip: dict) -> Path:
@@ -193,9 +206,29 @@ def main():
         current = trip
         path = save(trip)
         print("行程写到 %s" % path)
-        ok = build(path)
-        print("\n出好了。" if ok else "\n出册失败，看上面的报错。")
-        print("看完想改哪页，直接说；改完再出一次。\n")
+        ok, err = build(path)
+        if ok:
+            print("\n出好了。")
+            print("看完想改哪页，直接说；改完再出一次。\n")
+        else:
+            tail = "\n".join(err.strip().splitlines()[-6:])
+            print("\n出册失败，把报错交回去让它改。\n")
+            messages.append({"role": "user",
+                             "content": "排版时报错了，说明这份 JSON 有字段写错：\n%s\n"
+                                        "请按报错改，然后重新输出完整的 ```json 代码块。" % tail})
+            fixed = chat(messages)
+            messages.append({"role": "assistant", "content": fixed})
+            retry = extract_json(fixed)
+            if retry:
+                try:
+                    validate(retry)
+                    current = retry
+                    path = save(retry)
+                    ok2, _ = build(path)
+                    print("\n改完重出：%s" % ("好了" if ok2 else "还是失败，看上面的报错"))
+                except SystemExit as exc:
+                    print("改完还是不合格：%s" % exc)
+            print()
 
 
 if __name__ == "__main__":
