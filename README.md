@@ -64,6 +64,22 @@ python plan.py
 
 第一轮它问一句，第二轮直接吐一份三页的样例行程并出 PDF。整条链路（对话 → JSON → 校验 → 排版 → PDF）都是真的，只有模型是假的。
 
+## 配图
+
+`fetch.py` 按关键词找一张有授权的图，裁成版式要的尺寸，顺手把出处记进 `photos/CREDITS.txt`。Pexels 和 Unsplash 都支持。
+
+```bash
+set PEXELS_API_KEY=...          # https://www.pexels.com/api/ 注册即给，200 次/小时
+python fetch.py "大理 洱海" --out dali-erhai1 --size 940x380
+
+set UNSPLASH_ACCESS_KEY=...     # https://unsplash.com/developers，demo 50 次/小时
+python fetch.py "大理 洱海" --out dali-erhai1 --size 940x380 --provider unsplash
+```
+
+`--list` 只列候选不下载。`--size` 和版式里的一致：封面 1080x470，大图 940x380，小图 458x270，食物页 458x330。
+
+裁完统一提 14% 饱和度、5% 对比度，和册子里其它图保持一致。
+
 ## 需要什么
 
 - Python 3.9 以上
