@@ -33,6 +33,37 @@
 
 没有 agent 也能用：自己照着 `trips/_template.json` 填，一条命令出册。
 
+## 命令行版本：不装 agent 也能聊
+
+仓库里带了一个能直接对话的版本，不需要 Claude Code 之类：
+
+```bash
+pip install -r requirements.txt
+export TRIPBOOK_API_KEY=sk-...        # Windows: set TRIPBOOK_API_KEY=sk-...
+python plan.py
+```
+
+它会按 `agent/SYSTEM.md` 跟你聊：先问天数、同行人、预算，信息够了就自己写出 `trips/*.json`，校验通过直接出 PDF。聊天里可以用 `/build` 重出、`/show` 看当前 JSON、`/reset` 重来、`/quit` 退出。
+
+接口按 OpenAI 兼容写，换别家只要改两个环境变量：
+
+```bash
+export TRIPBOOK_BASE_URL=https://api.deepseek.com/v1
+export TRIPBOOK_MODEL=deepseek-chat
+```
+
+**没有 key，想先看看它长什么样**，用自带的假模型：
+
+```bash
+python mock_llm.py 8910          # 另开一个窗口
+
+set TRIPBOOK_BASE_URL=http://127.0.0.1:8910/v1
+set TRIPBOOK_API_KEY=test
+python plan.py
+```
+
+第一轮它问一句，第二轮直接吐一份三页的样例行程并出 PDF。整条链路（对话 → JSON → 校验 → 排版 → PDF）都是真的，只有模型是假的。
+
 ## 需要什么
 
 - Python 3.9 以上
