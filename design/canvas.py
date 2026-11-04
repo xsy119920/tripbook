@@ -11,6 +11,26 @@ from . import tokens as T
 PUNCT = "，。、；：！？）》」』%"
 
 
+SAFE_CHARS = {
+    "\u2794": "\u2192", "\u279c": "\u2192", "\u279d": "\u2192", "\u279e": "\u2192",
+    "\u27a1": "\u2192", "\u21d2": "\u2192", "\u27f6": "\u2192", "\u27f9": "\u2192",
+    "\u2022": "\u00b7", "\u25cf": "\u00b7", "\u30fb": "\u00b7",
+}
+
+
+def clean(text: str) -> str:
+    """模型时不时写字体里没有的箭头和 emoji，画出来就是豆腐块。换成能显示的。"""
+    out = []
+    for ch in str(text):
+        if ch in SAFE_CHARS:
+            out.append(SAFE_CHARS[ch])
+        elif ord(ch) > 0xFFFF:
+            continue
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
 class Canvas:
     def __init__(self, width: int, height: int, scale: int = 2, bg: str = T.BG):
         self.w = width
@@ -33,6 +53,7 @@ class Canvas:
         return self.d.textlength(text, font=self.font(size, bold)) / self.s
 
     def wrap(self, text: str, size: float, maxw: float, bold: bool = False) -> list[str]:
+        text = clean(text)
         out, cur = [], ""
         for ch in text:
             if ch == "\n":
@@ -53,6 +74,7 @@ class Canvas:
         return out
 
     def text(self, x, y, s, size=28, fill=T.INK, bold=False, anchor="la"):
+        s = clean(s)
         self.d.text((x * self.s, y * self.s), s, font=self.font(size, bold),
                     fill=fill, anchor=anchor)
 
