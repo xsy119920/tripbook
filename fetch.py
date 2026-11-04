@@ -84,6 +84,59 @@ def crop_to(im, tw, th, top=0.38):
     return im.resize((tw, th), Image.LANCZOS)
 
 
+def search_with_fallback(query, count, key, provider="unsplash"):
+    """中文长词经常搜不到。一次不行就砍掉最后一个词再试。"""
+    fn = search_unsplash if provider == "unsplash" else search_pexels
+    words = query.split()
+    attempts = [" ".join(words[:n]) for n in range(len(words), 0, -1)] or [query]
+    for q in attempts:
+        hits = fn(q, count, key)
+        if hits:
+            return hits, q
+    return [], query
+
+
+def grab(query: str, dest: Path, size: tuple[int, int], key: str,
+         provider: str = "unsplash") -> tuple[Path, dict] | None:
+    """搜一张、下一张、裁好存起来。成功返回 (路径, 出处)，失败返回 None。"""
+    try:
+        hits, used = search_with_fallback(query, 5, key, provider)
+    except Exception as exc:
+        print("  搜「%s」失败：%s" % (query, exc))
+        return None
+    if not hits:
+        print("  「%s」没搜到，跳过" % query)
+        return None
+    if used != query:
+        print("  「%s」没搜到，改用「%s」" % (query, used))
+
+    tw, th = size
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    for hit in hits:
+        try:
+            data = get(hit["url"], timeout=60)
+        except Exception:
+            continue
+        tmp = dest.parent / ("_tmp_" + dest.name)
+        tmp.write_bytes(data)
+        try:
+            im = Image.open(tmp).convert("RGB")
+            if im.width < 800:
+                tmp.unlink(missing_ok=True)
+                continue
+            im = crop_to(im, tw, th)
+            im = ImageEnhance.Color(im).enhance(1.14)
+            im = ImageEnhance.Contrast(im).enhance(1.05)
+            im.save(dest, quality=92, optimize=True)
+        finally:
+            tmp.unlink(missing_ok=True)
+
+        with open(CREDITS, "a", encoding="utf-8") as f:
+            f.write("%s\t%s\t%s\t%s\n" % (dest.name, hit["provider"], hit["author"], hit["page"]))
+        return dest, hit
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser(description="找一个配图")
     ap.add_argument("query")
@@ -101,8 +154,9 @@ def main():
             env, "https://www.pexels.com/api/" if args.provider == "pexels" else "https://unsplash.com/developers"))
 
     try:
-        hits = (search_pexels if args.provider == "pexels" else search_unsplash)(
-            args.query, args.count, key)
+        hits, used = search_with_fallback(args.query, args.count, key, args.provider)
+        if used != args.query:
+            print("「%s」没搜到，改用「%s」" % (args.query, used))
     except urllib.error.HTTPError as exc:
         sys.exit("%s 返回 %s：%s" % (args.provider, exc.code, exc.read().decode("utf-8", "ignore")[:200]))
     except urllib.error.URLError as exc:

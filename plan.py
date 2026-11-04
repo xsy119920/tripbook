@@ -32,6 +32,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from design.validate import validate  # noqa: E402
+from fetch import grab  # noqa: E402
 
 BASE_URL = os.environ.get("TRIPBOOK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
 MODEL = os.environ.get("TRIPBOOK_MODEL", "deepseek-chat")
@@ -70,7 +71,10 @@ traffic  {"type":"traffic","no":"","title":"","accent":"gold","lead":"","columns
 budget   {"type":"budget","no":"","title":"","accent":"grey","lead":"","items":[["油费",600]],"todos":{"title":"","items":[""]},"emergencyLabel":"应急","emergency":[["急救","120"]]}
 
 accent 只能是 red、green、gold、rust、grey 之一。数字写数字，别加 ¥ 和逗号。
-5. 图片：写 "photos/xxx.jpg" 这种路径；没有图就别写 image/hero/a/b 字段，程序会画占位块。
+5. 图片：写 "photos/xxx.jpg" 这种路径；程序会自动去 Unsplash 找。
+   同时在最外层给一个 shots 数组：按页面顺序，为每一张需要图的槽位写一句中文检索词。
+   槽位顺序是：cover 一张；每个 spread 三张（hero、a、b）；每个 photos2 两张（a、b）。
+   检索词写得越具体越好，比如「大理 洱海 日出」「潮州 牌坊街 夜景」，别写「风景」。
 6. 不确定的事实写「出发前核对」，不要编具体时间。
 """
 
@@ -119,6 +123,48 @@ def build(trip_path: Path) -> bool:
     out = (proc.stdout or "") + (proc.stderr or "")
     print(out.strip())
     return proc.returncode == 0, out
+
+
+
+SLOTS = {
+    "cover": [("image", (1080, 470))],
+    "spread": [("hero", (940, 380)), ("a", (458, 270)), ("b", (458, 270))],
+    "photos2": [("a", (458, 330)), ("b", (458, 330))],
+}
+
+
+def fill_photos(trip, slug):
+    """把 JSON 里指向 photos/ 但文件不存在的槽位，用 Unsplash 补上。
+
+    查询词优先用 trip["shots"]（每张一句，按页面顺序），没有就用页面标题。
+    """
+    key = os.environ.get("UNSPLASH_ACCESS_KEY", "")
+    if not key:
+        return []
+
+    shots = trip.get("shots") or []
+    made = []
+    i = 0
+    for page in trip["pages"]:
+        for field, size in SLOTS.get(page.get("type"), []):
+            path = page.get(field)
+            if not path:
+                continue
+            target = ROOT / path
+            query = shots[i] if i < len(shots) else page.get("title", trip["title"])
+            i += 1
+            if target.exists():
+                continue
+            # 文件名沿用 JSON 里写的，保证版式不用改
+            name = Path(path).stem + ".jpg"
+            dest = ROOT / "photos" / name
+            hit = grab(query, dest, size, key)
+            if not hit:
+                continue
+            page[field] = "photos/" + name
+            made.append((query, hit[1]["author"], hit[1]["page"]))
+            print("  配图 %s ← 「%s」（%s）" % (name, query, hit[1]["author"]))
+    return made
 
 
 def save(trip: dict) -> Path:
@@ -204,6 +250,7 @@ def main():
                 continue
 
         current = trip
+        made = fill_photos(trip, trip.get("title", "trip"))
         path = save(trip)
         print("行程写到 %s" % path)
         ok, err = build(path)

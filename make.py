@@ -217,7 +217,7 @@ def page_route(c, p, n):
     accent = T.ACCENTS[p.get("accent", "red")]
     y = head(c, p["no"], p["title"], accent)
     if p.get("lead"):
-        c.text(M, y + 2, p["lead"], size=34, bold=True)
+        c.para(M, y + 2, p["lead"], 34, W - 2 * M, 46, bold=True)
 
     c.panel(M, 300, W - 2 * M, 372)
 
@@ -263,7 +263,7 @@ def page_spread(c, p, n):
     accent = T.ACCENTS[p.get("accent", "gold")]
     y = head(c, p["no"], p["title"], accent)
     if p.get("lead"):
-        c.text(M, y + 2, p["lead"], size=34, bold=True)
+        c.para(M, y + 2, p["lead"], 34, W - 2 * M, 46, bold=True)
 
     c.photo(p["hero"], 70, 288, 940, 380, r=24)
     c.text(72, 684, p.get("heroCaption", ""), size=25, bold=True)
@@ -282,7 +282,7 @@ def page_day(c, p, n):
     accent = T.ACCENTS[p.get("accent", "red")]
     y = head(c, p["no"], p["title"], accent)
     if p.get("lead"):
-        c.text(M, y + 2, p["lead"], size=36, bold=True)
+        c.para(M, y + 2, p["lead"], 36, W - 2 * M, 48, bold=True)
 
     rows = p.get("rows", [])
     gap = min(150, int((1150 - 280) / max(len(rows), 1)))
@@ -301,7 +301,7 @@ def page_photos2(c, p, n):
     accent = T.ACCENTS[p.get("accent", "gold")]
     y = head(c, p["no"], p["title"], accent)
     if p.get("lead"):
-        c.text(M, y + 2, p["lead"], size=36, bold=True)
+        c.para(M, y + 2, p["lead"], 36, W - 2 * M, 48, bold=True)
 
     c.photo(p["a"], 70, 288, 458, 330, r=24)
     c.photo(p["b"], 552, 288, 458, 330, r=24)
@@ -327,7 +327,7 @@ def page_traffic(c, p, n):
     accent = T.ACCENTS[p.get("accent", "gold")]
     y = head(c, p["no"], p["title"], accent)
     if p.get("lead"):
-        c.text(M, y + 2, p["lead"], size=36, bold=True)
+        c.para(M, y + 2, p["lead"], 36, W - 2 * M, 48, bold=True)
 
     cols = p["columns"]
     cw = (W - 2 * M - 2 * 20) / 3
@@ -364,7 +364,7 @@ def page_budget(c, p, n):
     accent = T.ACCENTS[p.get("accent", "grey")]
     y = head(c, p["no"], p["title"], accent)
     if p.get("lead"):
-        c.text(M, y + 2, p["lead"], size=36, bold=True)
+        c.para(M, y + 2, p["lead"], 36, W - 2 * M, 48, bold=True)
 
     items = p["items"]
     values = [(k, num(v)) for k, v in items]
