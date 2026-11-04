@@ -69,12 +69,14 @@ python plan.py
 `fetch.py` 按关键词找一张有授权的图，裁成版式要的尺寸，顺手把出处记进 `photos/CREDITS.txt`。Pexels 和 Unsplash 都支持。
 
 ```bash
-set PEXELS_API_KEY=...          # https://www.pexels.com/api/ 注册即给，200 次/小时
+set UNSPLASH_ACCESS_KEY=...     # https://unsplash.com/developers，注册即给，demo 50 次/小时
 python fetch.py "大理 洱海" --out dali-erhai1 --size 940x380
 
-set UNSPLASH_ACCESS_KEY=...     # https://unsplash.com/developers，demo 50 次/小时
-python fetch.py "大理 洱海" --out dali-erhai1 --size 940x380 --provider unsplash
+set PEXELS_API_KEY=...          # 备选源，https://www.pexels.com/api/，200 次/小时
+python fetch.py "大理 洱海" --out dali-erhai1 --size 940x380 --provider pexels
 ```
+
+用它家的图要署名，格式是「Photo by 摄影师 on Unsplash」，链接回照片页。`fetch.py` 会把摄影师和原始链接记进 `photos/CREDITS.txt`。
 
 `--list` 只列候选不下载。`--size` 和版式里的一致：封面 1080x470，大图 940x380，小图 458x270，食物页 458x330。
 

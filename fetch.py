@@ -8,7 +8,7 @@
     python fetch.py "大理 洱海" --out dali-erhai1 --size 940x380 --provider unsplash
 
 不给 --out 就存成 photos/<关键词>.jpg。
-默认 provider 是 pexels，可用 --provider unsplash 切。
+默认 provider 是 unsplash，可用 --provider pexels 切。
 """
 from __future__ import annotations
 
@@ -89,7 +89,7 @@ def main():
     ap.add_argument("query")
     ap.add_argument("--out", default=None, help="文件名，不带扩展名")
     ap.add_argument("--size", default="940x380", help="宽x高，默认 940x380")
-    ap.add_argument("--provider", choices=["pexels", "unsplash"], default="pexels")
+    ap.add_argument("--provider", choices=["unsplash", "pexels"], default="unsplash")
     ap.add_argument("--count", type=int, default=5, help="拿几张里挑第一张能下的")
     ap.add_argument("--list", action="store_true", help="只列出候选，不下载")
     args = ap.parse_args()
