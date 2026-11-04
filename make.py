@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """把一份行程 JSON 渲染成一册卡片式 PDF。
 
     python make.py trips/chaoshan.json
@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT))
 
 from design import tokens as T          # noqa: E402
 from design.canvas import Canvas        # noqa: E402
+from design.validate import validate    # noqa: E402
 
 W, H, M = 1080, 1440, 64
 
@@ -487,7 +488,13 @@ def main():
     args = ap.parse_args()
 
     trip_path = Path(args.trip).resolve()
-    trip = json.loads(trip_path.read_text(encoding="utf-8-sig"))
+    if not trip_path.exists():
+        sys.exit("找不到文件：%s" % trip_path)
+    try:
+        trip = json.loads(trip_path.read_text(encoding="utf-8-sig"))
+    except json.JSONDecodeError as exc:
+        sys.exit("JSON 格式有问题，第 %d 行第 %d 列：%s" % (exc.lineno, exc.colno, exc.msg))
+    validate(trip)
     base = trip_path.parent
 
     for p in trip["pages"]:
